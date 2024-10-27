@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CISC/CMPE 204 Modelling Project
 
 Welcome to the major project for CISC/CMPE 204!
@@ -56,3 +57,7 @@ Finally, if you are in a folder with a bunch of spaces in the absolute path, the
 ```
 docker run -it -v "%cd%":/PROJECT cisc204
 ```
+=======
+# ModelDungeonGenerator
+A modelling project for CISC 204 where we model a dungeon generator in propositional logic.
+>>>>>>> 94d9517fae4aef45d529060ac49736996fc9ce34
