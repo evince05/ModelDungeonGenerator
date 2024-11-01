@@ -1,11 +1,20 @@
 <<<<<<< HEAD
-# CISC/CMPE 204 Modelling Project
+# CISC/CMPE 204: Model Dungeon Generator
 
-Welcome to the major project for CISC/CMPE 204!
+This project explores valid arrangements of rooms for a [dungeon crawler](https://en.wikipedia.org/wiki/Dungeon_crawl).
+We specify dungeons as a set of 13 rooms (tiles), 4 of which have special properties:
 
-Change this README.md file to summarize your project, and provide pointers to the general structure of the repository. How you organize and build things (which files, how you structure things, etc) is entirely up to you! The only things you must keep in place are what is already listed in the **Structure** section below.
+- The start tile, where the player would start the level
+- The end tile, where the player must arrive to finish the level
+- The treasure tile, where the player can find a special reward
+- The trap room, where the player might meet their doom
+
+Note that this model does not explore gameplay through the dungeon.
+It simply lists the valid arrangements of tiles for level generation.
 
 ## Structure
+
+* `utils.py`: Contains our relevant code for this draft of our project.
 
 * `documents`: Contains folders for both of your draft and final submissions. README.md files are included in both.
 * `run.py`: General wrapper script that you can choose to use or not. Only requirement is that you implement the one function inside of there for the auto-checks.
