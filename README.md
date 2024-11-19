@@ -14,7 +14,8 @@ It simply lists the valid arrangements of tiles for level generation.
 
 ## Structure
 
-* `utils.py`: Contains our relevant code for this draft of our project.
+* `utils.py`: Contains legacy code from project draft (remove this!)
+* `start.bat`: Run this file to execute run.py via Docker.
 
 * `documents`: Contains folders for both of your draft and final submissions. README.md files are included in both.
 * `run.py`: General wrapper script that you can choose to use or not. Only requirement is that you implement the one function inside of there for the auto-checks.

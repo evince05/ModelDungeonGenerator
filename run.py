@@ -10,6 +10,45 @@ config.sat_backend = "kissat"
 E = Encoding()
 
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
+
+# Constant values for testing purposes
+NUM_TILES = 4
+GRID_LENGTH = 3
+
+"""
+These should be treated as constant values. The loops populate them based on the values
+of NUM_TILES and GRID_LENGTH
+"""
+TILES = []
+for i in range(NUM_TILES):
+    TILES.append(f't{i}')
+
+print(TILES)
+
+LOCATIONS = []
+
+for row in range(GRID_LENGTH):
+    for col in range(GRID_LENGTH):
+        LOCATIONS.append(f"l_{row},{col}")
+
+print(LOCATIONS)
+
+
+@proposition(E)
+class Location:
+    def __init__(self, tile, location):
+        # error checking. make sure the tiles are valid
+        assert tile in TILES
+        assert location in LOCATIONS
+
+        # init values
+        self.tile = tile
+        self.location = location
+
+    def _prop_name(self):
+        return f"tile({self.tile}) @ loc{self.location}"
+
+
 @proposition(E)
 class BasicPropositions:
 
@@ -53,15 +92,18 @@ z = FancyPropositions("z")
 #  This restriction is fairly minimal, and if there is any concern, reach out to the teaching staff to clarify
 #  what the expectations are.
 def example_theory():
-    # Add custom constraints by creating formulas with the variables you created. 
-    E.add_constraint((a | b) & ~x)
-    # Implication
-    E.add_constraint(y >> z)
-    # Negate a formula
-    E.add_constraint(~(x & y))
-    # You can also add more customized "fancy" constraints. Use case: you don't want to enforce "exactly one"
-    # for every instance of BasicPropositions, but you want to enforce it for a, b, and c.:
-    constraint.add_exactly_one(E, a, b, c)
+    # Add custom constraints by creating formulas with the variables you created.
+
+    print("hello world")
+    for t in TILES:
+        possible_locations = []
+
+        # For each tile, determines every possible location for it (25x25 tiles for each)
+        for loc in LOCATIONS:
+            possible_locations.append(Location(t, loc))
+
+        # Ensures that only one of these holds
+        constraint.add_exactly_one(E, possible_locations)
 
     return E
 
