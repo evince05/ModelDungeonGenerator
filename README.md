@@ -2,12 +2,10 @@
 # CISC/CMPE 204: Model Dungeon Generator
 
 This project explores valid arrangements of rooms for a [dungeon crawler](https://en.wikipedia.org/wiki/Dungeon_crawl).
-We specify dungeons as a set of 13 rooms (tiles), 4 of which have special properties:
+We specify dungeons as a set of 13 rooms (tiles), 2 of which have special properties:
 
 - The start tile, where the player would start the level
 - The end tile, where the player must arrive to finish the level
-- The treasure tile, where the player can find a special reward
-- The trap room, where the player might meet their doom
 
 Note that this model does not explore gameplay through the dungeon.
 It simply lists the valid arrangements of tiles for level generation.
