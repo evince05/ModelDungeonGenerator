@@ -35,6 +35,7 @@ def test_final_files():
 if __name__ == "__main__":
     if len(sys.argv) != 2 or sys.argv[1] not in ['draft', 'final']:
         print(USAGE)
+        print("pog")
         exit(1)
     test_theory()
     file_checks(sys.argv[1])
