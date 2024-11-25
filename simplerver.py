@@ -1,15 +1,17 @@
 from bauhaus import Encoding, proposition, constraint
 from nnf import config
 
+# docker run -it -v "C:\Users\paulz\Documents\ModelDungeonGenerator:/PROJECT" cisc204 /bin/bash -c "python3 simplerver.py"
+
 # Use a faster SAT solver
 config.sat_backend = "kissat"
 
-# Encoding for the full-sized test
+# Encoding for the test
 E = Encoding()
 
-# Constants for the full problem size
-NUM_TILES = 13  # 1 start, 1 end, 11 regular tiles
-GRID_SIZE = 25  # 25x25 grid
+# Constants for the 7-tile version
+NUM_TILES = 13  # 1 start, 1 end, 5 regular tiles
+GRID_SIZE = 25  # Smaller 5x5 grid
 
 TILES = [f"t{i}" for i in range(NUM_TILES)]
 SPECIAL_TILES = ["start", "end"]
@@ -95,12 +97,10 @@ def run_tests():
     # Test satisfiability
     print("\nSatisfiable:", theory.satisfiable())
 
-    # Sample and process a few solutions
-    print("\nSample Solutions:")
-    for i in range(3):  # Generate 3 random solutions to avoid long runtime
-        solution = theory.solve()
-        print(f"\nSolution {i+1}:")
-        process_solution(solution)
+    # Output one solution
+    print("\nSolution:")
+    solution = theory.solve()  # Only generate one solution
+    process_solution(solution)
 
 
 if __name__ == "__main__":
