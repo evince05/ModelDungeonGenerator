@@ -1,6 +1,8 @@
 from bauhaus import Encoding, proposition, constraint
 from nnf import config
 
+import visuals.solution_display as display
+
 # Use a faster SAT solver
 config.sat_backend = "kissat"
 
@@ -8,13 +10,14 @@ config.sat_backend = "kissat"
 E = Encoding()
 
 # Constants for the full problem size
-NUM_TILES = 13  # 1 start, 1 end, 11 regular tiles
-GRID_SIZE = 25  # 25x25 grid
+NUM_TILES = 5  # 1 start, 1 end, 6 regular tiles
+GRID_SIZE = 5  # 25x25 grid
 
 TILES = [f"t{i}" for i in range(NUM_TILES)]
 SPECIAL_TILES = ["start", "end"]
+
 REGULAR_TILES = TILES[2:]  # Exclude start and end
-LOCATIONS = [f"l_{row},{col}" for row in range(GRID_SIZE) for col in range(GRID_SIZE)]
+LOCATIONS = [f"{row},{col}" for row in range(GRID_SIZE) for col in range(GRID_SIZE)]
 
 
 @proposition(E)
@@ -43,12 +46,20 @@ class Location:
 
 def apply_constraints():
     # Ensure exactly one start and one end tile
-    constraint.add_exactly_one(E, [RoomType(tile, "start") for tile in TILES])
-    constraint.add_exactly_one(E, [RoomType(tile, "end") for tile in TILES])
+
+    """
+    NOTE: Be careful when adding constraints!
+    constraint.add_exactly_one(E, list_constraints) makes sure that only one constraint from list_constraints is true
+    so, constraint.add_exactly_one(E, [RoomType(tile, "regular") for tile in REGULAR_TILES]) makes only ONE tile regular.
+    """
+
+    # Forced tiles [0] and [1] to be start/end tiles (avoids overwriting... they can still have any location)
+    constraint.add_exactly_one(E, RoomType(TILES[0], "start"))
+    constraint.add_exactly_one(E, RoomType(TILES[1], "end"))
 
     # Ensure all other tiles are regular
     for tile in REGULAR_TILES:
-        constraint.add_exactly_one(E, [RoomType(tile, "regular")])
+        constraint.add_exactly_one(E, RoomType(tile, "regular"))
 
     # Ensure each tile is placed in exactly one location
     for tile in TILES:
@@ -86,6 +97,8 @@ def process_solution(solution):
     print("\nTile Types:")
     for tile, room_type in tile_types.items():
         print(f"  {tile} -> {room_type}")
+
+    display.create_grid(tile_locations, tile_types)
 
 
 def run_tests():
