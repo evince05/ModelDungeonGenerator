@@ -10,8 +10,8 @@ config.sat_backend = "kissat"
 E = Encoding()
 
 # Constants for the 7-tile version
-NUM_TILES = 13  # 1 start, 1 end, 5 regular tiles
-GRID_SIZE = 25  # Smaller 5x5 grid
+NUM_TILES = 2  # 1 start, 1 end, 5 regular tiles
+GRID_SIZE = 10  # Smaller 5x5 grid
 
 TILES = [f"t{i}" for i in range(NUM_TILES)]
 SPECIAL_TILES = ["start", "end"]
