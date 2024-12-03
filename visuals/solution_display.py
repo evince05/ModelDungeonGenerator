@@ -9,6 +9,13 @@ TILE_DISPLAY_CHARS = {
     "regular": 'R'
 }
 
+# A pretty way to print the debug map :)
+CONSOLE_COLORS = {
+    'S': '\033[33m',
+    'E': '\033[92m',
+    'R': '\033[36m'
+}
+
 
 def create_grid(tile_locations, tile_types):
     """
@@ -45,7 +52,9 @@ def create_grid(tile_locations, tile_types):
             for (tile, location) in tile_locations.items():
                 if location == loc_str:
                     # Found a match!
-                    print(TILE_DISPLAY_CHARS[tile_types[tile]] + " ", end="")
+                    tile_char = TILE_DISPLAY_CHARS[tile_types[tile]]
+
+                    print(CONSOLE_COLORS[tile_char] + tile_char + " \033[0m", end="")
                     found_tile = True
                     break
 
