@@ -1,5 +1,6 @@
 from bauhaus import Encoding, proposition, constraint, Or
 from nnf import config
+import random
 
 # Use a faster SAT solver
 config.sat_backend = "kissat"
@@ -8,8 +9,8 @@ config.sat_backend = "kissat"
 E = Encoding()
 
 # Constants for the full problem size
-NUM_TILES = 5  # 1 start, 1 end, 3 regular tiles
-GRID_SIZE = 5  # 5x5 grid
+NUM_TILES = 10  # 1 start, 1 end, 3 regular tiles
+GRID_SIZE = 10  # 5x5 grid
 
 TILES = [f"t{i}" for i in range(NUM_TILES)]
 SPECIAL_TILES = ["start", "end"]
@@ -70,35 +71,35 @@ def apply_constraints():
     # Start tile in center
     constraint.add_exactly_one(E, [Location(TILES[0], CENTER_LOCATION)])
 
-    # Adjacency constraints
+    # Adjacency definition
     for tile1 in TILES:
         for tile2 in TILES:
             if tile1 != tile2:
-                for loc1 in LOCATIONS:
-                    adj_locs = get_adjacent_locations(loc1)
-                    constraint.add_implies_all(
-                        E,
-                        Adjacent(tile1, tile2),
-                        Or([Location(tile1, loc1) & Location(tile2, adj) for adj in adj_locs])
-                    )
+                adjacency_condition = Or([Location(tile1, loc1) & Location(tile2, adj)
+                                          for loc1 in LOCATIONS
+                                          for adj in get_adjacent_locations(loc1)])
+                E.add_constraint(Adjacent(tile1, tile2) >> adjacency_condition)
+                E.add_constraint(adjacency_condition >> Adjacent(tile1, tile2))
 
     # Regular tiles must have exactly 2 adjacent tiles
     for tile in REGULAR_TILES:
         adjacent_constraints = [Adjacent(tile, other) for other in TILES if other != tile]
-        constraint.add_exactly_k(E, 2, adjacent_constraints)
+        constraint.add_at_least_one(E, adjacent_constraints)
+        constraint.add_at_most_k(E, 2, adjacent_constraints)
 
     # Start and end tiles must have exactly one adjacent tile
     for special_tile in [TILES[0], TILES[1]]:
         adj_constraints = [Adjacent(special_tile, other) for other in TILES if other != special_tile]
         constraint.add_exactly_one(E, adj_constraints)
 
-    # Ensure connectivity
-    for i in range(1, len(TILES)):
-        constraint.add_implies_all(
+    # Ensure connectivity (path from start to end)
+    visited = [TILES[0]]
+    for _ in range(len(TILES) - 1):
+        constraint.add_exactly_one(
             E,
-            Adjacent(TILES[i-1], TILES[i]),
-            Or([Adjacent(TILES[i-1], TILES[j]) & Adjacent(TILES[j], TILES[i]) for j in range(len(TILES)) if j != i-1 and j != i])
+            [Adjacent(visited[-1], tile) for tile in TILES if tile not in visited]
         )
+        visited.append(TILES[_ + 1])
 
 def process_solution(solution):
     tile_locations = {tile: None for tile in TILES}
@@ -149,6 +150,11 @@ def run_tests():
             tile_locations, tile_types = process_solution(solution)
             grid = create_grid(tile_locations, tile_types)
             print_grid(grid)
+            
+            # Force a different solution for the next iteration
+            if i < 2:
+                E.add_constraint(~Or([var for var, val in solution.items() if val]))
+                theory = E.compile()  # Recompile the theory with the new constraint
         else:
             print(f"\nNo solution found for attempt {i+1}")
 
