@@ -1,7 +1,6 @@
 from bauhaus import Encoding, proposition, constraint, Or
 from nnf import config
-
-import visuals.solution_display as display
+import random
 
 # Use a faster SAT solver
 config.sat_backend = "kissat"
@@ -10,12 +9,11 @@ config.sat_backend = "kissat"
 E = Encoding()
 
 # Constants for the full problem size
-NUM_TILES = 5  # 1 start, 1 end, 3 regular tiles
-GRID_SIZE = 5  # 5x5 grid
+NUM_TILES = 10  # 1 start, 1 end, 3 regular tiles
+GRID_SIZE = 10  # 5x5 grid
 
 TILES = [f"t{i}" for i in range(NUM_TILES)]
 SPECIAL_TILES = ["start", "end"]
-
 
 REGULAR_TILES = TILES[2:]  # Exclude start and end
 LOCATIONS = [f"{row},{col}" for row in range(GRID_SIZE) for col in range(GRID_SIZE)]
@@ -24,8 +22,6 @@ CENTER_LOCATION = f"{GRID_SIZE // 2},{GRID_SIZE // 2}"
 @proposition(E)
 class RoomType:
     def __init__(self, tile, room_type):
-        assert tile in TILES
-        assert room_type in SPECIAL_TILES + ["regular"]
         self.tile = tile
         self.room_type = room_type
 
@@ -35,8 +31,6 @@ class RoomType:
 @proposition(E)
 class Location:
     def __init__(self, tile, location):
-        assert tile in TILES
-        assert location in LOCATIONS
         self.tile = tile
         self.location = location
 
@@ -46,8 +40,6 @@ class Location:
 @proposition(E)
 class Adjacent:
     def __init__(self, tile1, tile2):
-        assert tile1 in TILES
-        assert tile2 in TILES
         self.tile1 = tile1
         self.tile2 = tile2
 
@@ -55,7 +47,6 @@ class Adjacent:
         return f"Adjacent({self.tile1}-{self.tile2})"
 
 def get_adjacent_locations(location):
-    """Returns a list of locations adjacent to the given location."""
     row, col = map(int, location.split(","))
     adjacent = []
     for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
@@ -65,104 +56,105 @@ def get_adjacent_locations(location):
     return adjacent
 
 def apply_constraints():
-    # Ensure exactly one start and one end tile
-
-    """
-    NOTE: Be careful when adding constraints!
-    constraint.add_exactly_one(E, list_constraints) makes sure that only one constraint from list_constraints is true
-    so, constraint.add_exactly_one(E, [RoomType(tile, "regular") for tile in REGULAR_TILES]) makes only ONE tile regular.
-    """
-
-    # Forced tiles [0] and [1] to be start/end tiles (avoids overwriting... they can still have any location)
-    constraint.add_exactly_one(E, RoomType(TILES[0], "start"))
-    constraint.add_exactly_one(E, RoomType(TILES[1], "end"))
-
-    # Ensure all other tiles are regular
+    # Room type constraints
+    constraint.add_exactly_one(E, [RoomType(TILES[0], "start")])
+    constraint.add_exactly_one(E, [RoomType(TILES[1], "end")])
     for tile in REGULAR_TILES:
-        constraint.add_exactly_one(E, RoomType(tile, "regular"))
+        constraint.add_exactly_one(E, [RoomType(tile, "regular")])
 
-    # Ensure each tile is placed in exactly one location
+    # Location constraints
     for tile in TILES:
         constraint.add_exactly_one(E, [Location(tile, loc) for loc in LOCATIONS])
-
-    # Ensure no two tiles occupy the same location
     for loc in LOCATIONS:
         constraint.add_at_most_one(E, [Location(tile, loc) for tile in TILES])
 
-    # Start tile must be in the center of the grid
+    # Start tile in center
     constraint.add_exactly_one(E, [Location(TILES[0], CENTER_LOCATION)])
 
-    # Enforce adjacency constraints
+    # Adjacency definition
     for tile1 in TILES:
         for tile2 in TILES:
             if tile1 != tile2:
-                # If two tiles are adjacent, their locations must also be adjacent
-                for loc1 in LOCATIONS:
-                    adj_locs = get_adjacent_locations(loc1)
-                    constraint.add_implies_all(
-                        E,
-                        Adjacent(tile1, tile2),
-                        Or([Location(tile1, loc1) & Location(tile2, adj) for adj in adj_locs])
-                    )
+                adjacency_condition = Or([Location(tile1, loc1) & Location(tile2, adj)
+                                          for loc1 in LOCATIONS
+                                          for adj in get_adjacent_locations(loc1)])
+                E.add_constraint(Adjacent(tile1, tile2) >> adjacency_condition)
+                E.add_constraint(adjacency_condition >> Adjacent(tile1, tile2))
 
-    # Each tile must have at least 1 and at most 2 adjacent tiles, except start and end tiles
+    # Regular tiles must have exactly 2 adjacent tiles
     for tile in REGULAR_TILES:
         adjacent_constraints = [Adjacent(tile, other) for other in TILES if other != tile]
         constraint.add_at_least_one(E, adjacent_constraints)
         constraint.add_at_most_k(E, 2, adjacent_constraints)
 
     # Start and end tiles must have exactly one adjacent tile
-    start_adj_constraints = [Adjacent(TILES[0], other) for other in TILES if other != TILES[0]]
-    end_adj_constraints = [Adjacent(TILES[1], other) for other in TILES if other != TILES[1]]
+    for special_tile in [TILES[0], TILES[1]]:
+        adj_constraints = [Adjacent(special_tile, other) for other in TILES if other != special_tile]
+        constraint.add_exactly_one(E, adj_constraints)
 
-    constraint.add_exactly_one(E, start_adj_constraints)
-    constraint.add_exactly_one(E, end_adj_constraints)
+    # Ensure connectivity (path from start to end)
+    visited = [TILES[0]]
+    for _ in range(len(TILES) - 1):
+        constraint.add_exactly_one(
+            E,
+            [Adjacent(visited[-1], tile) for tile in TILES if tile not in visited]
+        )
+        visited.append(TILES[_ + 1])
 
 def process_solution(solution):
-    """Extract and format the relevant parts of a solution."""
     tile_locations = {tile: None for tile in TILES}
     tile_types = {}
 
     for var, value in solution.items():
-        if value:  # Only process variables set to True
+        if value:
             var_str = str(var)
-            # Check if the variable is a Location proposition
             if "Location(" in var_str:
-                # Extract tile and location from the string representation
                 parts = var_str.split("(")[1].strip(")").split("@")
                 tile, location = parts[0].strip(), parts[1].strip()
                 tile_locations[tile] = location
-            # Check if the variable is a RoomType proposition
             elif "RoomType(" in var_str:
                 parts = var_str.split("(")[1].strip(")").split("=")
                 tile, room_type = parts[0].strip(), parts[1].strip()
                 tile_types[tile] = room_type
 
-    # Output results in a readable format
-    print("\nTile Locations:")
+    return tile_locations, tile_types
+
+def create_grid(tile_locations, tile_types):
+    grid = [['X' for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
     for tile, location in tile_locations.items():
-        print(f"  {tile} -> {location}")
+        row, col = map(int, location.split(','))
+        if tile_types[tile] == 'start':
+            grid[row][col] = 'S'
+        elif tile_types[tile] == 'end':
+            grid[row][col] = 'E'
+        else:
+            grid[row][col] = 'R'
+    return grid
 
-    print("\nTile Types:")
-    for tile, room_type in tile_types.items():
-        print(f"  {tile} -> {room_type}")
-
-    display.create_grid(tile_locations, tile_types)
+def print_grid(grid):
+    print("--------------------")
+    for row in grid:
+        print(' '.join(row))
+    print("--------------------")
 
 def run_tests():
     apply_constraints()
     theory = E.compile()
-
-    # Test satisfiability
     print("\nSatisfiable:", theory.satisfiable())
 
-    # Sample and process a few solutions
     print("\nSample Solutions:")
-    for i in range(3):  # Generate 3 random solutions to avoid long runtime
+    for i in range(3):
         solution = theory.solve()
         if solution:
             print(f"\nSolution {i+1}:")
-            process_solution(solution)
+            tile_locations, tile_types = process_solution(solution)
+            grid = create_grid(tile_locations, tile_types)
+            print_grid(grid)
+            
+            # Force a different solution for the next iteration
+            if i < 2:
+                E.add_constraint(~Or([var for var, val in solution.items() if val]))
+                theory = E.compile()  # Recompile the theory with the new constraint
         else:
             print(f"\nNo solution found for attempt {i+1}")
 
