@@ -16,6 +16,7 @@ GRID_SIZE = 5  # 5x5 grid
 TILES = [f"t{i}" for i in range(NUM_TILES)]
 SPECIAL_TILES = ["start", "end"]
 
+
 REGULAR_TILES = TILES[2:]  # Exclude start and end
 LOCATIONS = [f"{row},{col}" for row in range(GRID_SIZE) for col in range(GRID_SIZE)]
 CENTER_LOCATION = f"{GRID_SIZE // 2},{GRID_SIZE // 2}"
@@ -65,12 +66,20 @@ def get_adjacent_locations(location):
 
 def apply_constraints():
     # Ensure exactly one start and one end tile
-    constraint.add_exactly_one(E, [RoomType(TILES[0], "start")])
-    constraint.add_exactly_one(E, [RoomType(TILES[1], "end")])
+
+    """
+    NOTE: Be careful when adding constraints!
+    constraint.add_exactly_one(E, list_constraints) makes sure that only one constraint from list_constraints is true
+    so, constraint.add_exactly_one(E, [RoomType(tile, "regular") for tile in REGULAR_TILES]) makes only ONE tile regular.
+    """
+
+    # Forced tiles [0] and [1] to be start/end tiles (avoids overwriting... they can still have any location)
+    constraint.add_exactly_one(E, RoomType(TILES[0], "start"))
+    constraint.add_exactly_one(E, RoomType(TILES[1], "end"))
 
     # Ensure all other tiles are regular
     for tile in REGULAR_TILES:
-        constraint.add_exactly_one(E, [RoomType(tile, "regular")])
+        constraint.add_exactly_one(E, RoomType(tile, "regular"))
 
     # Ensure each tile is placed in exactly one location
     for tile in TILES:
