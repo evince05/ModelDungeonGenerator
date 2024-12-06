@@ -4,7 +4,6 @@ import random
 
 from visuals import solution_display
 
-# Use a faster SAT solver
 config.sat_backend = "kissat"
 
 # Encoding for the full-sized test
@@ -21,6 +20,7 @@ REGULAR_TILES = TILES[2:]  # Exclude start and end
 LOCATIONS = [f"{row},{col}" for row in range(GRID_SIZE) for col in range(GRID_SIZE)]
 CENTER_LOCATION = f"{GRID_SIZE // 2},{GRID_SIZE // 2}"
 
+# Proposition classes
 @proposition(E)
 class RoomType:
     def __init__(self, tile, room_type):
@@ -49,6 +49,7 @@ class Adjacent:
         return f"Adjacent({self.tile1}-{self.tile2})"
 
 def get_adjacent_locations(location):
+    # Returns a list of adjacent locations for a given location
     row, col = map(int, location.split(","))
     adjacent = []
     for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
@@ -103,6 +104,7 @@ def apply_constraints():
         )
         visited.append(TILES[_ + 1])
 
+# Extract tile locations and types from the solution
 def process_solution(solution):
     tile_locations = {tile: None for tile in TILES}
     tile_types = {}
@@ -121,13 +123,14 @@ def process_solution(solution):
 
     return tile_locations, tile_types
 
+# Print the grid representation of the solution
 def print_grid(grid):
     print("--------------------")
     for row in grid:
         print(' '.join(row))
     print("--------------------")
 
-
+# Run the main logic to find and display a solution
 def run_tests():
     apply_constraints()
     theory = E.compile()
