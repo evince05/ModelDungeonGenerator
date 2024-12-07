@@ -12,9 +12,9 @@ It simply lists the valid arrangements of tiles for level generation.
 ## Our Model
 
 Our model generates level maps for dungeon crawlers. We display these maps on a square grid of locations, as shown below.
-[Example Map 1](example_solutions/sol1.png)
-[Example Map 2](example_solutions/sol2.png)
-[Example Map 3](example_solutions/sol3.png)
+You can find more examples in the `example_solutions` folder.  
+
+![Example Map 1](example_solutions/sol1.png)
 
 ## Structure
 
