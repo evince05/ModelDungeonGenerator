@@ -9,6 +9,13 @@ We specify dungeons as a set of 13 rooms (tiles), 2 of which have special proper
 Note that this model does not explore gameplay through the dungeon.
 It simply lists the valid arrangements of tiles for level generation.
 
+## Our Model
+
+Our model generates level maps for dungeon crawlers. We display these maps on a square grid of locations, as shown below.
+[Example Map 1](example_solutions/sol1.png)
+[Example Map 2](example_solutions/sol2.png)
+[Example Map 3](example_solutions/sol3.png)
+
 ## Structure
 
 * `utils.py`: Contains legacy code from project draft (remove this!)
@@ -26,6 +33,5 @@ You will need Docker installed to run the project.
 1) Run the file start.bat. If this doesn't work, open Docker Desktop and try again. 
 2) If that doesn't work, open Command Prompt and cd into this directory, then run each command in start.bat
 
-=======
 # ModelDungeonGenerator
 A modelling project for CISC 204 where we model a dungeon generator in propositional logic.
