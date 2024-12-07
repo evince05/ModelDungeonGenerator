@@ -1,18 +1,14 @@
 import run
 
-# Turn this to false if you just want to see the grid
-DEBUG_HEADER = True
 
 def create_grid(tile_locations, tile_types):
 
-    if DEBUG_HEADER:
-        print("----------------------")
-        print("Display Grid:")
-        print("  S: Start room")
-        print("  E: End room")
-        print("  R: Regular room")
-        print("  X: -- no room --")
-        print("")
+    """
+    Creates a colorful 2D representation of the dungeon.
+    :param tile_locations: The locations of all tiles.
+    :param tile_types: The types of each tile (regular, start, end)
+    :return: A 2D representation of the grid, stored in a string.
+    """
 
     grid = [['X' for _ in range(run.GRID_SIZE)] for _ in range(run.GRID_SIZE)]
     for tile, location in tile_locations.items():
